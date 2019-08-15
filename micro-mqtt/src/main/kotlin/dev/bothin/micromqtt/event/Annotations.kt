@@ -1,7 +1,10 @@
 package dev.bothin.micromqtt.event
 
 @Target(AnnotationTarget.FUNCTION)
-annotation class Event(val topic: String)
+annotation class EventConsumer(val topic: String)
+
+@Target(AnnotationTarget.FUNCTION)
+annotation class EventProducer(val topic: String)
 
 @Target(AnnotationTarget.CLASS)
 annotation class EventController

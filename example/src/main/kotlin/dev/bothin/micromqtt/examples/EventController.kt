@@ -1,26 +1,27 @@
 package dev.bothin.micromqtt.examples
 
 import dev.bothin.micromqtt.event.EventBody
-import dev.bothin.micromqtt.event.Event
+import dev.bothin.micromqtt.event.EventConsumer
 import dev.bothin.micromqtt.event.EventController
+import dev.bothin.micromqtt.event.EventProducer
 import dev.bothin.micromqtt.event.EventTopic
-import dev.bothin.micromqtt.mqtt.MicroMqttClient
 
 @EventController
-class EventController(private val service: RandomService, private val microMqttClient: MicroMqttClient) {
+class EventController(private val service: RandomService) {
 
-    @Event(topic = "test/+")
-    fun consumeEventOnTest(@EventTopic topic: String, @EventBody payload: Dto) {
+    @EventConsumer(topic = "test")
+    @EventProducer(topic = "tested")
+    fun consumeEventOnTest(@EventTopic topic: String, @EventBody payload: Dto): String {
         println("On $topic random ${service.number()} ${payload.msg}")
-        microMqttClient.emit("response", Dto("yup"))
+        return "Yellow"
     }
 
-    @Event(topic = "test_2")
+    @EventConsumer(topic = "test_2")
     fun consumeEventOnTest(@EventBody payload: Dto) {
         println("Random ${service.number()} ${payload.msg}")
     }
 
-    @Event(topic = "test_3")
+    @EventConsumer(topic = "test_3/+")
     fun consumeEventOnTest(@EventTopic topic: String) {
         println("On $topic random ${service.number()}")
     }

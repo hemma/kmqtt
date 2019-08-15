@@ -7,7 +7,7 @@ import org.kodein.di.generic.instance
 import org.reflections.Reflections
 
 internal class EventProcessor(private val kodein: Kodein) {
-    private val consumers = mutableMapOf<String, Consumer>()
+    private val events = mutableMapOf<String, Event>()
     private val client by kodein.instance<EventClient>()
 
     fun setup() {
@@ -16,8 +16,8 @@ internal class EventProcessor(private val kodein: Kodein) {
     }
 
     private fun subscribe() {
-        consumers.forEach { (topic, consumer) ->
-            client.eventSubscribe(topic, consumer)
+        events.forEach { (topic, event) ->
+            client.eventSubscribe(topic, event)
         }
     }
 
@@ -29,11 +29,11 @@ internal class EventProcessor(private val kodein: Kodein) {
         annotated.forEach {
             println(it.simpleName)
             val instance by kodein.Instance(TT(it))
-            it.methods.filter { c -> c.isAnnotationPresent(Event::class.java) }
-                .forEach { m ->
-                    println("   ${m.name}")
+            it.methods.filter { clazz -> clazz.isAnnotationPresent(EventConsumer::class.java) }
+                .forEach { method ->
+                    println("   ${method.name}")
                     var i = 0
-                    val payloadTypeIndex = m.parameterAnnotations.mapNotNull { annotations ->
+                    val payloadTypeIndex = method.parameterAnnotations.mapNotNull { annotations ->
                         if (annotations.size == 1 && annotations.first().annotationClass == EventBody::class) {
                             i
                         } else {
@@ -41,13 +41,17 @@ internal class EventProcessor(private val kodein: Kodein) {
                             null
                         }
                     }
-                    var payloadType: Class<*>? = null
+                    var consumePayloadType: Class<*>? = null
                     if (payloadTypeIndex.size == 1) {
-                        payloadType = m.parameters[payloadTypeIndex.first()].type
+                        consumePayloadType = method.parameters[payloadTypeIndex.first()].type
                     }
-                    consumers[m.getAnnotation(Event::class.java).topic] =
-                        Consumer(instance, m, payloadType)
 
+                    val consumeTopic = method.getAnnotation(EventConsumer::class.java).topic
+                    val produceTopic = method.getAnnotation(EventProducer::class.java)?.topic ?: ""
+                    val consumer = Consumer(topic = consumeTopic, payloadType = consumePayloadType)
+                    val producer = Producer(topic = produceTopic)
+                    val event = Event(instance = instance, method = method, consumer = consumer, producer = producer)
+                    events[consumeTopic] = event
                 }
         }
     }

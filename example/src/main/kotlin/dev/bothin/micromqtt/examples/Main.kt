@@ -9,7 +9,7 @@ import org.kodein.di.generic.singleton
 fun main(args: Array<String>) {
     val example = Kodein.Module("example") {
         bind<RandomService>() with singleton { RandomService() }
-        bind<EventController>() with singleton { EventController(instance(), instance()) }
+        bind<EventController>() with singleton { EventController(instance()) }
     }
 
     val app = EventApplication(listOf(example))
