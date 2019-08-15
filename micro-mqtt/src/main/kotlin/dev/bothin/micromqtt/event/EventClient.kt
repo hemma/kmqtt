@@ -3,6 +3,7 @@ package dev.bothin.micromqtt.event
 import com.fasterxml.jackson.databind.ObjectMapper
 import dev.bothin.micromqtt.event.error.ExceptionHandler
 import dev.bothin.micromqtt.mqtt.MicroMqttClient
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.eclipse.paho.client.mqttv3.MqttMessage
@@ -18,7 +19,7 @@ class EventClient(private val client: MicroMqttClient, private val mapper: Objec
     private fun handleEvent(event: Event): (String, MqttMessage) -> Unit {
         return { topic: String, message: MqttMessage ->
             val messageAsString = message.payload.toString(StandardCharsets.UTF_8)
-            GlobalScope.launch {
+            GlobalScope.launch(Dispatchers.IO) {
                 try {
                     val timeReflection = measureTimeMillis {
                         val producePayload = consume(event, topic, messageAsString)

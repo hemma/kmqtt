@@ -1,6 +1,7 @@
 package dev.bothin.micromqtt.mqtt
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
@@ -9,15 +10,11 @@ import org.eclipse.paho.client.mqttv3.MqttClient
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttMessage
 
-open class MicroMqttClient : MqttCallback {
+open class MicroMqttClient(private val mapper: ObjectMapper) : MqttCallback {
 
-    private val client: MqttClient
+    private val client: MqttClient = MqttClient("tcp://localhost:1883", "clientID")
 
-    private val mapper: ObjectMapper
-
-    constructor(mapper: ObjectMapper) {
-        this.mapper = mapper
-        client = MqttClient("tcp://localhost:1883", "clientID")
+    init {
         client.setCallback(this)
         val options = MqttConnectOptions()
         options.isAutomaticReconnect = true
@@ -25,7 +22,7 @@ open class MicroMqttClient : MqttCallback {
     }
 
     fun <T : Any> emit(topic: String, payload: T, qos: Int = 1, retain: Boolean = false) {
-        GlobalScope.launch {
+        GlobalScope.launch(Dispatchers.IO) {
             client.publish(topic, mapper.writeValueAsBytes(payload), qos, retain)
         }
     }
