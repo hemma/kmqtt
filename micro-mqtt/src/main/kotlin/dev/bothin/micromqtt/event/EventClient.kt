@@ -12,8 +12,8 @@ import kotlin.system.measureTimeMillis
 
 class EventClient(private val client: MicroMqttClient, private val mapper: ObjectMapper, private val exceptionHandler: ExceptionHandler) {
 
-    fun eventSubscribe(topic: String, event: Event) {
-        client.subscribe(topic, handleEvent(event))
+    fun eventSubscribe(event: Event) {
+        client.subscribe(event.consumer.topic, handleEvent(event))
     }
 
     private fun handleEvent(event: Event): (String, MqttMessage) -> Unit {
@@ -22,10 +22,7 @@ class EventClient(private val client: MicroMqttClient, private val mapper: Objec
             GlobalScope.launch(Dispatchers.IO) {
                 try {
                     val timeReflection = measureTimeMillis {
-                        val producePayload = consume(event, topic, messageAsString)
-                        if (event.producer.topic.isNotEmpty() && producePayload != null) {
-                            produce(event, producePayload)
-                        }
+                        consume(event, topic, messageAsString)
                     }
                     println("Took $timeReflection ms to consume message on $topic")
                 } catch (e: Exception) {
@@ -37,16 +34,11 @@ class EventClient(private val client: MicroMqttClient, private val mapper: Objec
         }
     }
 
-    private fun produce(event: Event, payload: Any) {
-        client.emit(event.producer.topic, payload)
-    }
-
     private fun consume(event: Event, topic: String, messageAsString: String): Any? {
-        val args = getArgs(event, messageAsString, topic)
-
+        val args = getArgs(event, messageAsString, topic).toTypedArray()
         return event.method.invoke(
             event.instance,
-            *args.toTypedArray()
+            *args
         )
     }
 

@@ -7,6 +7,7 @@ dependencies {
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.9"
     implementation "io.github.microutils:kotlin-logging:1.6.24"
     api 'org.kodein.di:kodein-di-generic-jvm:6.3.3'
+    implementation 'cglib:cglib:3.3.0'
 
     //testCompile "org.testcontainers:testcontainers:1.11.3"
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'

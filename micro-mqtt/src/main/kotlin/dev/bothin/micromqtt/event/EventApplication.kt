@@ -3,16 +3,19 @@ package dev.bothin.micromqtt.event
 import dev.bothin.micromqtt.Configuration
 import org.kodein.di.Kodein
 
-class EventApplication(kodeinModules: List<Kodein.Module>) {
+class EventApplication(private val kodeinModules: List<Kodein.Module>) {
 
-    private val kodein = Kodein {
-        import(Configuration.microMqttKodein)
-        importAll(kodeinModules)
-    }
+    private lateinit var kodein: Kodein
 
-    private val eventProcessor = EventProcessor(kodein)
+    private val eventProcessor = EventProcessor()
 
     fun run() {
-        eventProcessor.setup()
+        kodein = Kodein {
+            import(Configuration.microMqttKodein)
+            importAll(kodeinModules)
+        }
+        val extendedKodein = eventProcessor.setup(kodein)
+
+        eventProcessor.run(extendedKodein)
     }
 }
