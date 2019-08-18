@@ -7,16 +7,16 @@ import dev.bothin.micromqtt.event.EventProducer
 import dev.bothin.micromqtt.event.EventTopic
 
 @EventController
-open class HelloController {
+class HelloController {
 
     @EventConsumer(topic = "hello")
     @EventProducer(topic = "hello/answer")
-    open fun onHelloNameAnswer(@EventBody payload: NameDto): HelloDto {
+    fun onHelloNameAnswer(@EventBody payload: NameDto): HelloDto {
         return HelloDto(msg = "Hello ${payload.name}")
     }
 
     @EventConsumer(topic = "bye/+")
-    open fun onByeName(@EventTopic topic: String, @EventBody payload: NameDto) {
+    fun onByeName(@EventTopic topic: String, @EventBody payload: NameDto) {
         println("Bye ${payload.name} on $topic")
     }
 

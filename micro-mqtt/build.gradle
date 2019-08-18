@@ -9,9 +9,12 @@ dependencies {
     api 'org.kodein.di:kodein-di-generic-jvm:6.3.3'
     implementation 'cglib:cglib:3.3.0'
 
-    //testCompile "org.testcontainers:testcontainers:1.11.3"
+    testCompile "org.testcontainers:testcontainers:1.11.3"
+    testCompile "org.testcontainers:junit-jupiter:1.11.3"
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
     testImplementation "io.mockk:mockk:1.8.13"
     testImplementation 'org.assertj:assertj-core:3.11.1'
+    testImplementation 'org.awaitility:awaitility:3.1.6'
+    testImplementation 'org.awaitility:awaitility-kotlin:3.1.6'
 }
