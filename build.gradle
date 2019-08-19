@@ -23,7 +23,7 @@ subprojects {
     apply plugin: 'kotlin'
     apply plugin: 'idea'
 
-    group = "dev.bothin.micromqtt"
+    group = "dev.bothin.smooth-mqtt"
 
     version = '0.0.1-SNAPSHOT'
 

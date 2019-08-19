@@ -1,7 +1,7 @@
 
 
 dependencies {
-    api project(':micro-mqtt')
+    api project(':smooth-mqtt')
 
 
     //testCompile "org.testcontainers:testcontainers:1.11.3"

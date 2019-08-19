@@ -1,6 +1,6 @@
-rootProject.name = 'micro'
+rootProject.name = 'smooth'
 
-include 'micro-mqtt'
+include 'smooth-mqtt'
 include 'example'
 
 
