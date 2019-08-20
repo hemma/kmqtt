@@ -14,7 +14,8 @@ class EventApplication(private val kodeinModules: List<Kodein.Module>, packageNa
             import(Configuration.smoothMqttKodein(mqttHost, mqttPort))
             importAll(kodeinModules)
         }
+        val allModules = listOf(Configuration.smoothMqttKodein(mqttHost, mqttPort), *kodeinModules.toTypedArray())
         eventProcessor.setup()
-        return eventProcessor.run(kodein)
+        return eventProcessor.run(allModules)
     }
 }
