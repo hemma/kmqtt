@@ -27,7 +27,6 @@ class EventClient(private val client: SmoothMqttClient, private val mapper: Obje
                             produce(controller, producePayload)
                         }
                     }
-                    println("Took $timeReflection ms to consume message on $topic")
                 } catch (e: Exception) {
                     println(e)
                     exceptionHandler.onException(e, topic, message)
