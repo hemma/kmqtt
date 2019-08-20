@@ -1,16 +1,19 @@
 package dev.bothin.smoothmqtt.event
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import dev.bothin.smoothmqtt.event.error.ExceptionHandler
+import dev.bothin.smoothmqtt.event.error.ErrorAdvice
 import dev.bothin.smoothmqtt.mqtt.SmoothMqttClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import mu.KotlinLogging
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import java.nio.charset.StandardCharsets
-import kotlin.system.measureTimeMillis
 
-class EventClient(private val client: SmoothMqttClient, private val mapper: ObjectMapper, private val exceptionHandler: ExceptionHandler) {
+private val log = KotlinLogging.logger { }
+
+
+class EventClient(private val client: SmoothMqttClient, private val mapper: ObjectMapper, private val errorAdvice: ErrorAdvice?) {
 
     fun eventSubscribe(controller: Controller) {
         client.subscribe(controller.consumer.topic, handleEvent(controller))
@@ -21,15 +24,13 @@ class EventClient(private val client: SmoothMqttClient, private val mapper: Obje
             val messageAsString = message.payload.toString(StandardCharsets.UTF_8)
             GlobalScope.launch(Dispatchers.IO) {
                 try {
-                    val timeReflection = measureTimeMillis {
-                        val producePayload = consume(controller, topic, messageAsString)
-                        if (producePayload != null && controller.producer.topic.isNotEmpty()) {
-                            produce(controller, producePayload)
-                        }
+                    val producePayload = consume(controller, topic, messageAsString)
+                    if (producePayload != null && controller.producer.topic.isNotEmpty()) {
+                        produce(controller, producePayload)
                     }
                 } catch (e: Exception) {
-                    println(e)
-                    exceptionHandler.onException(e, topic, message)
+                    log.error { e }
+                    errorAdvice?.onException(e, controller.consumer.topic, topic, message)
                 }
             }
             Unit
