@@ -12,8 +12,11 @@ import java.nio.charset.StandardCharsets
 
 private val log = KotlinLogging.logger { }
 
-
-class EventClient(private val client: SmoothMqttClient, private val mapper: ObjectMapper, private val errorAdvice: ErrorAdvice?) {
+class EventClient(
+    private val client: SmoothMqttClient,
+    private val mapper: ObjectMapper,
+    private val errorAdvice: ErrorAdvice?
+) {
 
     fun eventSubscribe(controller: Controller) {
         client.subscribe(controller.consumer.topic, handleEvent(controller))
@@ -21,18 +24,24 @@ class EventClient(private val client: SmoothMqttClient, private val mapper: Obje
 
     private fun handleEvent(controller: Controller): (String, MqttMessage) -> Unit {
         return { topic: String, message: MqttMessage ->
-            val messageAsString = message.payload.toString(StandardCharsets.UTF_8)
-            GlobalScope.launch(Dispatchers.IO) {
-                try {
-                    val producePayload = consume(controller, topic, messageAsString)
-                    if (producePayload != null && controller.producer.topic.isNotEmpty()) {
-                        produce(controller, producePayload)
+            try {
+                val messageAsString = message.payload.toString(StandardCharsets.UTF_8)
+                GlobalScope.launch(Dispatchers.IO) {
+                    try {
+                        val producePayload = consume(controller, topic, messageAsString)
+                        if (producePayload != null && controller.producer.topic.isNotEmpty()) {
+                            produce(controller, producePayload)
+                        }
+                    } catch (e: Exception) {
+                        log.error(e) { "Failed to handle event on topic $topic" }
+                        errorAdvice?.onException(e, controller.consumer.topic, topic, message)
                     }
-                } catch (e: Exception) {
-                    log.error { e }
-                    errorAdvice?.onException(e, controller.consumer.topic, topic, message)
                 }
+            } catch (e: Exception) {
+                log.error(e) { "Failed to handle event on topic $topic" }
+                errorAdvice?.onException(e, controller.consumer.topic, topic, message)
             }
+
             Unit
         }
     }

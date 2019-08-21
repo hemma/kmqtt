@@ -1,6 +1,9 @@
 package dev.bothin.smoothmqtt
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.bothin.smoothmqtt.event.EventClient
 import dev.bothin.smoothmqtt.mqtt.SmoothMqttClient
@@ -16,8 +19,20 @@ class Configuration {
     companion object {
         fun smoothMqttKodein(host: String, port: Int): Kodein.Module {
             return Kodein.Module("smooth-mqtt") {
-                bind<ObjectMapper>() with singleton { jacksonObjectMapper().findAndRegisterModules() }
-                bind<MqttClient>() with singleton { MqttClient("tcp://$host:$port", "smooth_mqtt_client", MemoryPersistence()) }
+                bind<ObjectMapper>() with singleton {
+                    val mapper = jacksonObjectMapper()
+                    mapper.registerModule(KotlinModule())
+                    mapper.registerModule(Jdk8Module())
+                    mapper.registerModule(JavaTimeModule())
+                    mapper
+                }
+                bind<MqttClient>() with singleton {
+                    MqttClient(
+                        "tcp://$host:$port",
+                        "smooth_mqtt_client",
+                        MemoryPersistence()
+                    )
+                }
                 bind<SmoothMqttClient>() with singleton { SmoothMqttClient(instance(), instance()) }
                 bind<EventClient>() with singleton { EventClient(instance(), instance(), instanceOrNull()) }
             }
