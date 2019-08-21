@@ -17,9 +17,6 @@ class SmoothMqttClient(private val mqttClient: MqttClient, private val mapper: O
     init {
         mqttClient.setCallback(this)
         val options = MqttConnectOptions()
-        options.keepAliveInterval = 5
-        options.maxReconnectDelay = 10
-        options.isCleanSession = true
         options.maxInflight = 50
         options.isAutomaticReconnect = true
         mqttClient.connect(options)
