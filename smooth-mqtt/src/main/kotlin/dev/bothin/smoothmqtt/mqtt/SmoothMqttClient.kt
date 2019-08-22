@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mu.KotlinLogging
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallback
 import org.eclipse.paho.client.mqttv3.MqttClient
@@ -12,14 +13,32 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
 
-class SmoothMqttClient(private val mqttClient: MqttClient, private val mapper: ObjectMapper) : MqttCallback {
+private val log = KotlinLogging.logger { }
+
+class SmoothMqttClient(private val mqttClient: MqttClient, private val mapper: ObjectMapper, mqttOptions: MqttOptions = MqttOptions.default()) : MqttCallback {
 
     init {
         mqttClient.setCallback(this)
         val options = MqttConnectOptions()
-        options.maxInflight = 50
-        options.isAutomaticReconnect = true
-        mqttClient.connect(options)
+        options.maxInflight = mqttOptions.maxInFlight
+        options.isAutomaticReconnect = mqttOptions.automaticReconnect
+        if (mqttOptions.username != null && mqttOptions.password != null) {
+            options.userName = mqttOptions.username
+            options.password = mqttOptions.password.toCharArray()
+        }
+        options.keepAliveInterval = mqttOptions.keepAliveInterval
+        options.connectionTimeout = mqttOptions.connectionTimeOut
+        var retry = 0
+        while (!mqttClient.isConnected && retry < 10) {
+            try {
+                mqttClient.connect(options)
+            } catch (e: Exception) {
+                log.error(e) {}
+                Thread.sleep(1000L * retry)
+                retry++
+            }
+        }
+
     }
 
     fun <T : Any> emit(topic: String, payload: T, qos: Int = 1, retain: Boolean = false) {
@@ -35,11 +54,10 @@ class SmoothMqttClient(private val mqttClient: MqttClient, private val mapper: O
                         retries++
                         delay(1000 * retries.toLong())
                     } else {
-                        throw e
+                        throw throw RuntimeException(e)
                     }
                 }
             } while (retry && retries < 5)
-
         }
     }
 

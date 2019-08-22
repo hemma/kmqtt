@@ -27,7 +27,7 @@ apply plugin: 'kotlin'
 apply plugin: 'idea'
 
 group = 'dev.bothin.smooth-mqtt'
-version = '0.0.6'
+version = '0.0.7'
 
 repositories {
     mavenCentral()
@@ -82,7 +82,7 @@ publishing {
             }
             groupId 'dev.bothin.smooth-mqtt'
             artifactId 'smooth-mqtt'
-            version '0.0.6'
+            version '0.0.7'
         }
     }
 }
@@ -100,9 +100,9 @@ bintray {
         labels = ['mqtt', 'kotlin']
         publicDownloadNumbers = true
         version {
-            name = '0.0.6'
+            name = '0.0.7'
             desc = 'Mqtt library'
-            vcsTag = '0.0.6'
+            vcsTag = '0.0.7'
         }
     }
 }
@@ -136,6 +136,7 @@ dependencies {
     implementation "com.fasterxml.jackson.module:jackson-module-parameter-names:${jacksonVersion}"
 
     implementation "io.github.microutils:kotlin-logging:1.6.24"
+    implementation "org.slf4j:slf4j-simple:1.7.26"
     implementation 'cglib:cglib:3.3.0'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"

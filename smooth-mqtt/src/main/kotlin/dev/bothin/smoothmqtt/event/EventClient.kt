@@ -13,9 +13,9 @@ import java.nio.charset.StandardCharsets
 private val log = KotlinLogging.logger { }
 
 class EventClient(
-    private val client: SmoothMqttClient,
-    private val mapper: ObjectMapper,
-    private val errorAdvice: ErrorAdvice?
+        private val client: SmoothMqttClient,
+        private val mapper: ObjectMapper,
+        private val errorAdvice: ErrorAdvice?
 ) {
 
     fun eventSubscribe(controller: Controller) {
@@ -49,8 +49,8 @@ class EventClient(
     private fun consume(controller: Controller, topic: String, messageAsString: String): Any? {
         val args = getArgs(controller, messageAsString, topic).toTypedArray()
         return controller.method.invoke(
-            controller.instance,
-            *args
+                controller.instance,
+                *args
         )
     }
 

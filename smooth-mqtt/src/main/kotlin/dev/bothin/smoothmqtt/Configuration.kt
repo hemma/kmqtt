@@ -14,6 +14,7 @@ import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 import org.kodein.di.generic.instanceOrNull
 import org.kodein.di.generic.singleton
+import java.util.UUID
 
 class Configuration {
     companion object {
@@ -29,7 +30,7 @@ class Configuration {
                 bind<MqttClient>() with singleton {
                     MqttClient(
                         "tcp://$host:$port",
-                        "smooth_mqtt_client",
+                            "smooth_client_${UUID.randomUUID().toString().substring(0, 4)}",
                         MemoryPersistence()
                     )
                 }
