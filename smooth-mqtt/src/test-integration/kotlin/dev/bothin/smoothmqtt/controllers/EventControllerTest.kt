@@ -10,9 +10,6 @@ import dev.bothin.smoothmqtt.mqtt.SmoothMqttClient
 import io.mockk.junit5.MockKExtension
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -21,8 +18,6 @@ import org.kodein.di.direct
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 import org.kodein.di.generic.singleton
-import org.testcontainers.containers.Network.newNetwork
-import org.testcontainers.containers.ToxiproxyContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -32,24 +27,15 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @Testcontainers
 class EventControllerTest {
 
-    private val network = newNetwork()
-
-    @Container
-    private val toxiproxy = ToxiproxyContainer().withNetwork(network)
-
     @Container
     private val mqttContainer = KGenericContainer("eclipse-mosquitto")
         .withExposedPorts(1883)
         .waitingFor(Wait.forLogMessage(".*Config loaded from.*", 1))
-        .withNetwork(network)
-
-    private lateinit var proxy: ToxiproxyContainer.ContainerProxy
 
     private val testController: TestController = spyk(TestController())
 
     @BeforeEach
     fun setup() {
-        proxy = toxiproxy.getProxy(mqttContainer, 1883)
     }
 
     @Test
@@ -84,34 +70,6 @@ class EventControllerTest {
 
         verify(exactly = 1, timeout = 1000) { testController.onConsumeProduce(message) }
         verify(exactly = 1, timeout = 1000) { testController.onConsume(messageNext) }
-    }
-
-    @Test
-    fun `when connection lost then reconnect and consume`() {
-        val message = TestDto(msg = "Hello")
-
-        val exampleController = Kodein.Module("example") {
-            bind<TestController>() with singleton { testController }
-        }
-        val app = EventApplication(listOf(exampleController), "dev.bothin.smoothmqtt.controllers", proxy.containerIpAddress, proxy.proxyPort)
-        val kodein = app.run()
-
-        val client = kodein.direct.instance<SmoothMqttClient>()
-
-        client.emit("event_controller_test/topic_consume", message)
-        verify(exactly = 1, timeout = 3000) { testController.onConsume(message) }
-
-        GlobalScope.launch {
-            proxy.setConnectionCut(true)
-            client.emit("event_controller_test/topic_consume", message)
-        }
-
-        GlobalScope.launch {
-            delay(2000)
-            proxy.setConnectionCut(false)
-        }
-
-        verify(exactly = 2, timeout = 5000) { testController.onConsume(message) }
     }
 
 }

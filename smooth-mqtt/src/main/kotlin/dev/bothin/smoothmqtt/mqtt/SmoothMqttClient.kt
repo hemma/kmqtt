@@ -49,7 +49,9 @@ class SmoothMqttClient(private val mqttClient: MqttClient, private val mapper: O
                 try {
                     mqttClient.publish(topic, mapper.writeValueAsBytes(payload), qos, retain)
                 } catch (e: MqttException) {
-                    if (e.reasonCode.toShort() == MqttException.REASON_CODE_MAX_INFLIGHT || e.reasonCode.toShort() == MqttException.REASON_CODE_CLIENT_NOT_CONNECTED) {
+                    if (e.reasonCode.toShort() == MqttException.REASON_CODE_MAX_INFLIGHT ||
+                            e.reasonCode.toShort() == MqttException.REASON_CODE_CLIENT_NOT_CONNECTED ||
+                            e.reasonCode.toShort() == MqttException.REASON_CODE_CONNECTION_LOST) {
                         retry = true
                         retries++
                         delay(1000 * retries.toLong())
