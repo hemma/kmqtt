@@ -1,11 +1,12 @@
 package dev.bothin.smoothmqtt.controllers
 
+import dev.bothin.smoothmqtt.Configuration
+import dev.bothin.smoothmqtt.EventBody
+import dev.bothin.smoothmqtt.EventConsumer
+import dev.bothin.smoothmqtt.EventController
+import dev.bothin.smoothmqtt.EventProducer
 import dev.bothin.smoothmqtt.KGenericContainer
-import dev.bothin.smoothmqtt.event.EventApplication
-import dev.bothin.smoothmqtt.event.EventBody
-import dev.bothin.smoothmqtt.event.EventConsumer
-import dev.bothin.smoothmqtt.event.EventController
-import dev.bothin.smoothmqtt.event.EventProducer
+import dev.bothin.smoothmqtt.SmoothProcessor
 import dev.bothin.smoothmqtt.mqtt.SmoothMqttClient
 import io.mockk.junit5.MockKExtension
 import io.mockk.spyk
@@ -27,10 +28,13 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @Testcontainers
 class EventControllerTest {
 
-    @Container
-    private val mqttContainer = KGenericContainer("eclipse-mosquitto")
-        .withExposedPorts(1883)
-        .waitingFor(Wait.forLogMessage(".*Config loaded from.*", 1))
+    companion object {
+        @Container
+        @JvmStatic
+        private val mqttContainer = KGenericContainer("eclipse-mosquitto")
+            .withExposedPorts(1883)
+            .waitingFor(Wait.forLogMessage(".*Config loaded from.*", 1))
+    }
 
     private val testController: TestController = spyk(TestController())
 
@@ -45,8 +49,12 @@ class EventControllerTest {
         val exampleController = Kodein.Module("example") {
             bind<TestController>() with singleton { testController }
         }
-        val app = EventApplication(listOf(exampleController), "dev.bothin.smoothmqtt.controllers", mqttContainer.containerIpAddress, mqttContainer.getMappedPort(1883))
-        val kodein = app.run()
+        val kodein = Kodein {
+            import(exampleController)
+            import(Configuration.smoothMqttKodein(mqttContainer.containerIpAddress, mqttContainer.getMappedPort(1883)))
+        }
+        val controllers = SmoothProcessor.findControllers("dev.bothin.smoothmqtt.controllers")
+        controllers.map { it.register(kodein) }
 
         val client = kodein.direct.instance<SmoothMqttClient>()
         client.emit("event_controller_test/topic_consume", message)
@@ -62,8 +70,12 @@ class EventControllerTest {
         val exampleController = Kodein.Module("example") {
             bind<TestController>() with singleton { testController }
         }
-        val app = EventApplication(listOf(exampleController), "dev.bothin.smoothmqtt.controllers", mqttContainer.containerIpAddress, mqttContainer.getMappedPort(1883))
-        val kodein = app.run()
+        val kodein = Kodein {
+            import(exampleController)
+            import(Configuration.smoothMqttKodein(mqttContainer.containerIpAddress, mqttContainer.getMappedPort(1883)))
+        }
+        val controllers = SmoothProcessor.findControllers("dev.bothin.smoothmqtt.controllers")
+        controllers.map { it.register(kodein) }
 
         val client = kodein.direct.instance<SmoothMqttClient>()
         client.emit("event_controller_test/topic_consume_produce", message)

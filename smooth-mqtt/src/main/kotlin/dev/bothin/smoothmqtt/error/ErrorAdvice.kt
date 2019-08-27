@@ -1,4 +1,4 @@
-package dev.bothin.smoothmqtt.event.error
+package dev.bothin.smoothmqtt.error
 
 import org.eclipse.paho.client.mqttv3.MqttMessage
 

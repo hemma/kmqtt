@@ -1,4 +1,4 @@
-package dev.bothin.smoothmqtt.event
+package dev.bothin.smoothmqtt
 
 @Target(AnnotationTarget.FUNCTION)
 annotation class EventConsumer(val topic: String)

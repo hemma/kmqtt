@@ -1,7 +1,7 @@
 package dev.bothin.smoothmqtt.examples
 
-import dev.bothin.smoothmqtt.event.EventProducer
-import dev.bothin.smoothmqtt.event.EventPublisher
+import dev.bothin.smoothmqtt.EventProducer
+import dev.bothin.smoothmqtt.EventPublisher
 
 @EventPublisher
 interface HelloPublisher {

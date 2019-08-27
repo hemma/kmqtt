@@ -1,10 +1,11 @@
 package dev.bothin.smoothmqtt.publishers
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import dev.bothin.smoothmqtt.Configuration
+import dev.bothin.smoothmqtt.EventProducer
+import dev.bothin.smoothmqtt.EventPublisher
 import dev.bothin.smoothmqtt.KGenericContainer
-import dev.bothin.smoothmqtt.event.EventApplication
-import dev.bothin.smoothmqtt.event.EventProducer
-import dev.bothin.smoothmqtt.event.EventPublisher
+import dev.bothin.smoothmqtt.SmoothProcessor
 import io.mockk.junit5.MockKExtension
 import io.mockk.spyk
 import io.mockk.verify
@@ -16,6 +17,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.kodein.di.Kodein
 import org.kodein.di.direct
 import org.kodein.di.generic.instance
 import org.testcontainers.containers.wait.strategy.Wait
@@ -26,11 +28,13 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @Testcontainers
 class EventPublisherTest {
 
-    @Container
-    private val mqttContainer = KGenericContainer("eclipse-mosquitto")
-        .withExposedPorts(1883)
-        .waitingFor(Wait.forLogMessage(".*Config loaded from.*", 1))
-
+    companion object {
+        @Container
+        @JvmStatic
+        private val mqttContainer = KGenericContainer("eclipse-mosquitto")
+            .withExposedPorts(1883)
+            .waitingFor(Wait.forLogMessage(".*Config loaded from.*", 1))
+    }
 
     private lateinit var mqttClient: MqttClient
 
@@ -46,8 +50,12 @@ class EventPublisherTest {
     fun `when produce annotation then publish on topic`() {
         val message = TestDto(msg = "Hello")
 
-        val app = EventApplication(emptyList(), "dev.bothin.smoothmqtt.publishers", mqttContainer.containerIpAddress, mqttContainer.getMappedPort(1883))
-        val kodein = app.run()
+        val proxies = SmoothProcessor.findPublishers("dev.bothin.smoothmqtt.publishers").map { it.proxy() }
+
+        val kodein = Kodein {
+            importAll(proxies)
+            import(Configuration.smoothMqttKodein(mqttContainer.containerIpAddress, mqttContainer.getMappedPort(1883)))
+        }
 
         val testPublisher = kodein.direct.instance<TestPublisher>()
 
