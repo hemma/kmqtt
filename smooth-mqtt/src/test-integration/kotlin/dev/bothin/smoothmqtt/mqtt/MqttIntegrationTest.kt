@@ -139,11 +139,11 @@ class MqttIntegrationTest {
                 testPublisher.produce(message)
             }
             GlobalScope.launch {
-                delay(2000)
+                delay(1000)
                 proxy.setConnectionCut(false)
             }
 
-            verify(exactly = 1, timeout = 5000) { listener("event_publisher_test/topic_publish", match { mapper.readValue(it.payload, TestDto::class.java) == message }) }
+            verify(exactly = 1, timeout = 7000) { listener("event_publisher_test/topic_publish", match { mapper.readValue(it.payload, TestDto::class.java) == message }) }
         }
     }
 }
