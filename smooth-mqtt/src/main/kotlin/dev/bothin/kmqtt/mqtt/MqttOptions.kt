@@ -1,4 +1,4 @@
-package dev.bothin.smoothmqtt.mqtt
+package dev.bothin.kmqtt.mqtt
 
 data class MqttOptions(val maxInFlight: Int = 50,
                        val automaticReconnect: Boolean = true,

@@ -1,56 +1,53 @@
 package dev.bothin.smoothmqtt.examples
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import dev.bothin.smoothmqtt.Configuration
-import dev.bothin.smoothmqtt.SmoothProcessor
-import dev.bothin.smoothmqtt.mqtt.SmoothMqttClient
-import kotlinx.coroutines.GlobalScope
+import dev.bothin.kmqtt.KMqtt
+import dev.bothin.kmqtt.KMqttApplication
+import dev.bothin.kmqtt.mqtt.KMqttClient
+import dev.bothin.kmqtt.mqtt.OutMessage
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.eclipse.paho.client.mqttv3.MqttClient
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
-import org.kodein.di.Kodein
-import org.kodein.di.direct
-import org.kodein.di.generic.bind
-import org.kodein.di.generic.instance
-import org.kodein.di.generic.singleton
 
 fun main(args: Array<String>) {
-    //legacy()
-    //withoutKodein()
-    withKodein()
-}
+    val mqttClient = MqttClient("tcp://localhost:1883", "clientId", MemoryPersistence())
+    val kMqttClient = KMqttClient(mqttClient)
+    kMqttClient.connect()
 
-private fun withKodein() {
-    val controllers = SmoothProcessor.findControllers("dev.bothin.smoothmqtt.examples")
-    val publishers = SmoothProcessor.findPublishers("dev.bothin.smoothmqtt.examples").map { it.proxy() }
+    val kMqtt = KMqtt(kMqttClient)
 
-    val kodein = Kodein {
-        importAll(publishers)
-        import(Configuration.smoothMqttKodein("localhost", 1883))
-        bind<HelloController>() with singleton { HelloController() }
+    val app = KMqttApplication(kMqttClient)
+    app {
+        subscribe<Person>("hello/1") {
+            println("Hello ${it.payload.name}")
+            OutMessage.nothing()
+        }
+
+        subscribe<Person>("hello/+", "response") {
+            println("Hello + ${it.payload.name}")
+            OutMessage(payload = it.payload.copy(name = "Kmqtt"))
+        }
+
+        subscribe<Any>("#") {
+            println("Log: ${it.payload} on ${it.topic}")
+            OutMessage.nothing()
+        }
     }
-    controllers.forEach {
-        it.register(kodein)
+
+    kMqtt.emit("hello/1", Person("Stefan"))
+
+    runBlocking {
+        println("WaitReceive ${kMqtt.waitReceive<Person>("response")}")
+
+        println("EmitWaitReceive: ${kMqtt.emitWaitReceive("self", Person("Who?"), "self")}")
     }
 
-    val helloPublisher = kodein.direct.instance<HelloPublisher>()
-    GlobalScope.launch {
+
+    runBlocking {
         delay(1000)
-        helloPublisher.byeWorld(NameDto("hb"))
+        kMqttClient.unsubscribeAll()
+        kMqttClient.disconnect()
     }
 }
 
-private fun withoutKodein() {
-    val mqttClient = MqttClient("tcp://localhost:1883", "clientID", MemoryPersistence())
-    val smoothMqttClient = SmoothMqttClient(mqttClient, jacksonObjectMapper())
-    val controllers = SmoothProcessor.findControllers("dev.bothin.smoothmqtt.examples")
-    val publishers = SmoothProcessor.findPublishers("dev.bothin.smoothmqtt.examples")
-
-    controllers.forEach { it.register(smoothMqttClient, HelloController(), jacksonObjectMapper()) }
-    val proxies = publishers.map { it.proxy(smoothMqttClient) }
-    GlobalScope.launch {
-        delay(1000)
-        (proxies.first() as HelloPublisher).byeWorld(NameDto("byebye"))
-    }
-}
+data class Person(val name: String)

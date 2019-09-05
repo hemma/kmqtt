@@ -1,4 +1,4 @@
-package dev.bothin.smoothmqtt
+package dev.bothin.kmqtt
 
 import org.testcontainers.containers.GenericContainer
 
