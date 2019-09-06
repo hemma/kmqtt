@@ -43,17 +43,6 @@ class KMqttClient(private val mqttClient: MqttClient, private val objectMapper: 
         mqttClient.connect(options)
     }
 
-    fun <T : Any, R : Any> emitReceive(topicOut: String,
-                                       payload: T,
-                                       topicIn: String,
-                                       responseType: KClass<R>,
-                                       block: OnMessageType<R>,
-                                       qos: Int = 1,
-                                       retain: Boolean = false) {
-        emit(topicOut, payload, qos, retain)
-        subscribe(topicIn, block, responseType)
-    }
-
     fun <T : Any> emit(topicOut: String, payload: T, qos: Int = 1, retain: Boolean = false) {
         GlobalScope.launch(Dispatchers.IO) {
             try {
@@ -68,6 +57,17 @@ class KMqttClient(private val mqttClient: MqttClient, private val objectMapper: 
                 }
             }
         }
+    }
+
+    fun <T : Any, R : Any> emitReceive(topicOut: String,
+                                       payload: T,
+                                       topicIn: String,
+                                       responseType: KClass<R>,
+                                       block: OnMessageType<R>,
+                                       qos: Int = 1,
+                                       retain: Boolean = false) {
+        emit(topicOut, payload, qos, retain)
+        subscribe(topicIn, block, responseType)
     }
 
     fun <T : Any> subscribe(topicIn: String, block: OnMessageType<T>, type: KClass<T>) {
@@ -109,7 +109,17 @@ class KMqttClient(private val mqttClient: MqttClient, private val objectMapper: 
     override fun messageArrived(topic: String, message: MqttMessage) {
         GlobalScope.launch(Dispatchers.IO) {
             onMessageBlocks.filterKeys { key ->
-                topic.startsWith(key.replace("#", "").replace("+", ""))
+                when {
+                    key.endsWith("+") -> {
+                        topic.split("/").dropLast(1).joinToString("/") == key.replace("+", "").dropLast(1)
+                    }
+                    key.endsWith("#") -> {
+                        topic.startsWith(key.replace("#", ""))
+                    }
+                    else -> {
+                        topic == key
+                    }
+                }
             }.map {
                 it.value.invoke(topic, message)
             }
