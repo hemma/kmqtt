@@ -31,6 +31,11 @@ class KMqttClient(private val mqttClient: MqttClient, private val objectMapper: 
 
     fun connect() {
         mqttClient.setCallback(this)
+        val options = connectOptions()
+        mqttClient.connect(options)
+    }
+
+    private fun connectOptions(): MqttConnectOptions {
         val options = MqttConnectOptions()
         options.maxInflight = mqttOptions.maxInFlight
         options.isAutomaticReconnect = mqttOptions.automaticReconnect
@@ -40,7 +45,7 @@ class KMqttClient(private val mqttClient: MqttClient, private val objectMapper: 
         }
         options.keepAliveInterval = mqttOptions.keepAliveInterval
         options.connectionTimeout = mqttOptions.connectionTimeOut
-        mqttClient.connect(options)
+        return options
     }
 
     fun <T : Any> emit(topicOut: String, payload: T, qos: Int = 1, retain: Boolean = false) {
@@ -77,7 +82,7 @@ class KMqttClient(private val mqttClient: MqttClient, private val objectMapper: 
     fun <T : Any> subscribe(topicIn: String, topicOut: String? = null, block: OnMessageType<T>, type: KClass<T>) {
         mqttClient.subscribe(topicIn)
         if (isRegisteredTopic(topicIn)) {
-            throw RuntimeException("Only one subscription per topicIn, $topicIn")
+            throw RuntimeException("Only one subscription per topic, $topicIn")
         }
         onMessageBlocks[topicIn] = onMessage(block, type, topicOut)
     }
@@ -109,19 +114,23 @@ class KMqttClient(private val mqttClient: MqttClient, private val objectMapper: 
     override fun messageArrived(topic: String, message: MqttMessage) {
         GlobalScope.launch(Dispatchers.IO) {
             onMessageBlocks.filterKeys { key ->
-                when {
-                    key.endsWith("+") -> {
-                        topic.split("/").dropLast(1).joinToString("/") == key.replace("+", "").dropLast(1)
-                    }
-                    key.endsWith("#") -> {
-                        topic.startsWith(key.replace("#", ""))
-                    }
-                    else -> {
-                        topic == key
-                    }
-                }
+                messageFilter(key, topic)
             }.map {
                 it.value.invoke(topic, message)
+            }
+        }
+    }
+
+    private fun messageFilter(key: String, topic: String): Boolean {
+        return when {
+            key.endsWith("+") -> {
+                topic.split("/").dropLast(1).joinToString("/") == key.replace("+", "").dropLast(1)
+            }
+            key.endsWith("#") -> {
+                topic.startsWith(key.replace("#", ""))
+            }
+            else -> {
+                topic == key
             }
         }
     }
