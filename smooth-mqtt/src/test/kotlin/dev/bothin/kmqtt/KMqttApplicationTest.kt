@@ -5,7 +5,6 @@ import dev.bothin.kmqtt.mqtt.KMqttClient
 import dev.bothin.kmqtt.mqtt.OnMessageType
 import dev.bothin.kmqtt.mqtt.OutMessage
 import io.mockk.Runs
-import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
@@ -25,7 +24,7 @@ class KMqttApplicationTest {
 
     @BeforeEach
     fun setUp() {
-        clearAllMocks()
+        // clearAllMocks()
         application = KMqttApplication(mqttClient)
     }
 

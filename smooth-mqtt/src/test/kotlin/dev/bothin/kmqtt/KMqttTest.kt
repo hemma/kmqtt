@@ -5,7 +5,6 @@ import dev.bothin.kmqtt.mqtt.KMqttClient
 import dev.bothin.kmqtt.mqtt.OnMessageType
 import io.kotlintest.shouldBe
 import io.mockk.Runs
-import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
@@ -31,7 +30,7 @@ class KMqttTest {
 
     @BeforeEach
     fun setUp() {
-        clearAllMocks()
+        // clearAllMocks()
         kMqtt = KMqtt(kMqttClient)
 
         every { kMqttClient.unsubscribe(ofType()) } just Runs
