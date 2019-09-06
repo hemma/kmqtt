@@ -78,7 +78,7 @@ class KMqttTest {
         every { kMqttClient.emitReceive(ofType(), ofType<Dto>(), ofType(), ofType(), capture(onMessageSlot)) } just Runs
 
         GlobalScope.launch {
-            delay(25)
+            delay(100)
             onMessageSlot.captured.invoke(expectedResponse)
         }
         val response = runBlocking {
