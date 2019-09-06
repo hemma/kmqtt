@@ -59,7 +59,7 @@ class KMqttApplicationIntegrationTest {
 
         kmqtt.emit("topicIn", expectedMsg.copy())
 
-        await atMost Duration.FIVE_HUNDRED_MILLISECONDS untilNotNull {
+        await atMost Duration.ONE_SECOND untilNotNull {
             msgIn
         }
         msgIn shouldBe expectedMsg
@@ -77,7 +77,7 @@ class KMqttApplicationIntegrationTest {
         }
 
         val response = runBlocking {
-            kmqtt.emitWaitReceive("topicIn", Dto(msg = "msg"), "topicOut", java.time.Duration.ofMillis(500))
+            kmqtt.emitWaitReceive("topicIn", Dto(msg = "msg"), "topicOut", java.time.Duration.ofSeconds(1))
         }
 
         response shouldBe expectedMsg
