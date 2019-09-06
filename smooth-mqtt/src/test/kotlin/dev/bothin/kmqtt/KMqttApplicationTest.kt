@@ -2,7 +2,6 @@ package dev.bothin.kmqtt
 
 import dev.bothin.kmqtt.mqtt.InMessage
 import dev.bothin.kmqtt.mqtt.KMqttClient
-import dev.bothin.kmqtt.mqtt.Msg
 import dev.bothin.kmqtt.mqtt.OnMessageType
 import dev.bothin.kmqtt.mqtt.OutMessage
 import io.mockk.Runs

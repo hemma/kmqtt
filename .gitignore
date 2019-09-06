@@ -8,6 +8,8 @@
 
 .idea/
 
+.kotlintest/
+
 # User-specific stuff
 .idea/**/workspace.xml
 .idea/**/tasks.xml

@@ -11,7 +11,6 @@ import org.eclipse.paho.client.mqttv3.MqttClient
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 import java.nio.charset.Charset
 import kotlin.reflect.KClass
 
@@ -135,22 +134,3 @@ class KMqttClient(private val mqttClient: MqttClient, private val objectMapper: 
     }
 
 }
-
-
-fun main(args: Array<String>) {
-    val mqttClient = MqttClient("tcp://localhost:1883", "clientID", MemoryPersistence())
-    val client = KMqttClient(mqttClient)
-    client.connect()
-    val onMessageType: OnMessageType<Msg> = { inMsg: InMessage<Msg> ->
-        println("Message: ${inMsg.payload}")
-        OutMessage(inMsg.payload.copy(name = "new_name"))
-    }
-    client.subscribe(topicIn = "hello/2", block = onMessageType, type = Msg::class)
-    client.subscribe(topicIn = "hello", topicOut = "bye", block = onMessageType, type = Msg::class)
-
-    while (true) {
-
-    }
-}
-
-internal data class Msg(val name: String)

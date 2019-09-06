@@ -6,12 +6,8 @@ import dev.bothin.kmqtt.mqtt.OnMessageType
 import dev.bothin.kmqtt.mqtt.OutMessage
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
-import org.eclipse.paho.client.mqttv3.MqttClient
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 import java.time.Duration
 
 class KMqtt(val kMqttClient: KMqttClient) {
@@ -61,38 +57,3 @@ class KMqtt(val kMqttClient: KMqttClient) {
         }
     }
 }
-
-fun main(args: Array<String>) {
-    val mqttClient = MqttClient("tcp://localhost:1883", "clientID", MemoryPersistence())
-    val client = KMqttClient(mqttClient)
-    client.connect()
-    val kMqtt = KMqtt(client)
-
-    val msg = runBlocking {
-        try {
-            kMqtt.emitWaitReceive("out", Msg2("out"), "in")
-        } catch (e: Exception) {
-            throw RuntimeException(e)
-        }
-
-    }
-
-    println(msg)
-
-    GlobalScope.launch {
-        delay(250)
-        kMqtt.emit("out2", Msg2("yolo"))
-    }
-
-    val msg2 = runBlocking {
-        kMqtt.waitReceive<Msg2>("out2")
-    }
-
-    println(msg2)
-    println("DONE")
-
-    client.unsubscribeAll()
-    client.disconnect()
-}
-
-internal data class Msg2(val name: String)
