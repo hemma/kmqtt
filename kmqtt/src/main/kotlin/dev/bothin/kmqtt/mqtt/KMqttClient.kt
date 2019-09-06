@@ -18,9 +18,9 @@ typealias OnMessageMqtt = (String, MqttMessage) -> Unit
 typealias OnMessageType <T> = (InMessage<T>) -> OutMessage<Any>?
 
 data class InMessage<T : Any>(val topic: String, val payload: T)
-data class OutMessage<T : Any>(val payload: T?) {
+data class OutMessage<T : Any>(val payload: T? = null, val topicSuffix: String? = null) {
     companion object {
-        fun nothing() = OutMessage<Any>(null)
+        fun nothing() = OutMessage<Any>()
     }
 }
 
@@ -95,9 +95,11 @@ class KMqttClient(private val mqttClient: MqttClient, private val objectMapper: 
     private fun <T : Any> onMessage(block: OnMessageType<T>, type: KClass<T>, topicOut: String?): OnMessageMqtt {
         return { topic: String, message: MqttMessage ->
             val payload = map(message, type)
-            block.invoke(InMessage(topic, payload))?.let {
-                if (topicOut != null && it.payload != null) {
-                    emit(topicOut, it.payload)
+            block.invoke(InMessage(topic, payload))?.let { outMessage ->
+                if (topicOut != null && outMessage.payload != null) {
+                    outMessage.topicSuffix?.let {
+                        emit("$topicOut/$it", outMessage.payload)
+                    } ?: emit(topicOut, outMessage.payload)
                 }
             } ?: Unit
         }

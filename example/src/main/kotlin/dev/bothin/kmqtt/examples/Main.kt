@@ -23,9 +23,9 @@ fun main(args: Array<String>) {
             OutMessage.nothing()
         }
 
-        subscribe<Person>("hello/+", "response") {
+        subscribe<Person>("hello/+", "hello/response") {
             println("Hello + ${it.payload.name}")
-            OutMessage(payload = it.payload.copy(name = "Kmqtt"))
+            OutMessage(payload = it.payload.copy(name = "Kmqtt"), topicSuffix = "id")
         }
 
         subscribe<Any>("#") {
@@ -37,7 +37,7 @@ fun main(args: Array<String>) {
     kMqtt.emit("hello/1", Person("Stefan"))
 
     runBlocking {
-        println("WaitReceive ${kMqtt.waitReceive<Person>("response")}")
+        println("WaitReceive ${kMqtt.waitReceive<Person>("hello/response/+")}")
 
         println("EmitWaitReceive: ${kMqtt.emitWaitReceive("self", Person("Who?"), "self")}")
     }
