@@ -1,4 +1,4 @@
-package dev.bothin.smoothmqtt.examples
+package dev.bothin.kmqtt.examples
 
 import dev.bothin.kmqtt.KMqtt
 import dev.bothin.kmqtt.KMqttApplication

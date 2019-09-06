@@ -25,7 +25,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'kotlin'
 apply plugin: 'idea'
 
-group = 'dev.bothin.smooth-mqtt'
+group = 'dev.bothin.kmqtt'
 version = '0.1.0'
 
 repositories {
@@ -79,8 +79,8 @@ publishing {
             artifact project.sourcesJar {
                 classifier "sources"
             }
-            groupId 'dev.bothin.smooth-mqtt'
-            artifactId 'smooth-mqtt'
+            groupId 'dev.bothin.kmqtt'
+            artifactId 'kmqtt'
             version '0.1.0'
         }
     }
@@ -91,11 +91,11 @@ bintray {
     key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
     publications = ['MyPublication']
     pkg {
-        repo = 'smooth-mqtt'
-        name = 'smooth-mqtt'
+        repo = 'kmqtt'
+        name = 'kmqtt'
         userOrg = user
         licenses = ['MIT']
-        vcsUrl = 'https://github.com/hemma/smooth-mqtt.git'
+        vcsUrl = 'https://github.com/hemma/kmqtt.git'
         labels = ['mqtt', 'kotlin']
         publicDownloadNumbers = true
         version {

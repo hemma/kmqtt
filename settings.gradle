@@ -1,6 +1,6 @@
 rootProject.name = 'smooth'
 
-include 'smooth-mqtt'
+include 'kmqtt'
 include 'example'
 
 
