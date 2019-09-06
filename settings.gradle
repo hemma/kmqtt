@@ -1,4 +1,4 @@
-rootProject.name = 'smooth'
+rootProject.name = 'kmqtt'
 
 include 'kmqtt'
 include 'example'
